@@ -233,7 +233,6 @@
                 <div class="progress-fill" id="progressBar"></div>
             </div>
             <div class="question-counter" id="questionCounter"></div>
-            <div class="timer" id="timer"></div>
             
             <div class="question-box">
                 <div class="question-text" id="questionText"></div>
@@ -249,7 +248,7 @@
                 <h2>¡Prueba Completada! 🎉</h2>
                 <div class="score" id="finalScore"></div>
                 <div class="score-message" id="scoreMessage"></div>
-                <div class="timer" id="totalTime"></div>
+                <div class="timer" id="totalTime" style="font-size: 1.1em; margin: 15px 0;"></div>
                 
                 <div class="review-list" id="reviewList"></div>
                 
@@ -275,6 +274,11 @@
                 question: "Es un medio de transmisión aéreo que recibe y transmite señales de estacionones terrenas",
                 options: ["Coaxial", "Cable UTP", "Satelite", "Fibra Optica"],
                 correct: 2
+            },
+            {
+                question: "Es unas trasmisión donde los puntos de comunicacion hacen de receptor y transmisior en diferentes tiempos",
+                options: ["Simplex", "Paralela", "Duplex", "Semiduplex"],
+                correct: 3
             },
             {
                 question: "Es unas trasmisión donde los puntos de comunicacion hacen de receptor y transmisior en diferentes tiempos",
@@ -377,16 +381,6 @@
         const nextBtn = document.getElementById('nextBtn');
         const questionCounter = document.getElementById('questionCounter');
         const progressBar = document.getElementById('progressBar');
-        const timerDisplay = document.getElementById('timer');
-
-        function startTimer() {
-            timerInterval = setInterval(() => {
-                const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                const minutes = Math.floor(elapsed / 60);
-                const seconds = elapsed % 60;
-                timerDisplay.textContent = `⏱️ Tiempo: ${minutes}:${seconds.toString().padStart(2, '0')}`;
-            }, 1000);
-        }
 
         function loadQuestion() {
             const question = questions[currentQuestion];
@@ -438,7 +432,6 @@
         }
 
         function showResults() {
-            clearInterval(timerInterval);
             const totalTime = Math.floor((Date.now() - startTime) / 1000);
             const minutes = Math.floor(totalTime / 60);
             const seconds = totalTime % 60;
@@ -448,7 +441,7 @@
             
             const percentage = (score / questions.length) * 100;
             document.getElementById('finalScore').textContent = `${score}/${questions.length}`;
-            document.getElementById('totalTime').textContent = `⏱️ Tiempo total: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+            document.getElementById('totalTime').textContent = `Tiempo: ${minutes} min ${seconds} seg`;
             
             let message = '';
             if (percentage >= 90) {
@@ -501,7 +494,6 @@
             quizSection.classList.remove('hidden');
             
             loadQuestion();
-            startTimer();
         }
 
         nextBtn.addEventListener('click', nextQuestion);
@@ -509,7 +501,6 @@
 
         // Iniciar el quiz
         loadQuestion();
-        startTimer();
     </script>
 </body>
 </html>
