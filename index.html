@@ -132,6 +132,27 @@
             transform: none;
         }
 
+        .btn-secondary {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            margin-top: 15px;
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 10px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .button-group .btn {
+            margin: 0;
+        }
+
         .results {
             text-align: center;
         }
@@ -249,10 +270,15 @@
                 <div class="score" id="finalScore"></div>
                 <div class="score-message" id="scoreMessage"></div>
                 <div class="timer" id="totalTime" style="font-size: 1.1em; margin: 15px 0;"></div>
+                <div class="timer" id="completionDate" style="font-size: 0.95em; color: #666; margin: 10px 0;"></div>
                 
                 <div class="review-list" id="reviewList"></div>
                 
-                <button class="btn" id="retryBtn">Volver a Intentar</button>
+                <div class="button-group">
+                    <button class="btn" id="downloadBtn">📥 Descargar Reporte</button>
+                    <button class="btn btn-secondary" id="shareBtn">📤 Compartir por WhatsApp</button>
+                </div>
+                <button class="btn" id="retryBtn" style="margin-top: 15px;">🔄 Volver a Intentar</button>
             </div>
         </div>
     </div>
@@ -370,6 +396,7 @@
         let selectedOption = null;
         let startTime = Date.now();
         let timerInterval;
+        let completionDateTime = '';
 
         const quizSection = document.getElementById('quizSection');
         const resultsSection = document.getElementById('resultsSection');
@@ -433,12 +460,24 @@
             const minutes = Math.floor(totalTime / 60);
             const seconds = totalTime % 60;
             
+            // Obtener fecha y hora actual
+            const now = new Date();
+            const dateOptions = { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            completionDateTime = now.toLocaleDateString('es-ES', dateOptions);
+            
             quizSection.classList.add('hidden');
             resultsSection.classList.remove('hidden');
             
             const percentage = (score / questions.length) * 100;
             document.getElementById('finalScore').textContent = `${score}/${questions.length}`;
-            document.getElementById('totalTime').textContent = `Tiempo: ${minutes} min ${seconds} seg`;
+            document.getElementById('totalTime').textContent = `⏱️ Tiempo: ${minutes} min ${seconds} seg`;
+            document.getElementById('completionDate').textContent = `📅 Realizado: ${completionDateTime}`;
             
             let message = '';
             if (percentage >= 90) {
@@ -493,8 +532,95 @@
             loadQuestion();
         }
 
+        function generateReportText() {
+            const percentage = (score / questions.length) * 100;
+            const totalTime = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(totalTime / 60);
+            const seconds = totalTime % 60;
+            
+            let message = '';
+            if (percentage >= 90) {
+                message = '¡Excelente! 🌟 Dominaste el tema';
+            } else if (percentage >= 70) {
+                message = '¡Muy bien! 👍 Buen desempeño';
+            } else if (percentage >= 50) {
+                message = 'Bien 📚 Sigue practicando';
+            } else {
+                message = 'Necesitas repasar 📖 ¡No te rindas!';
+            }
+            
+            let report = `🎓 REPORTE DE EVALUACIÓN\n`;
+            report += `═══════════════════════════\n\n`;
+            report += `✅ Calificación: ${score}/${questions.length} (${percentage.toFixed(0)}%)\n`;
+            report += `⏱️ Tiempo: ${minutes} min ${seconds} seg\n`;
+            report += `📅 Fecha: ${completionDateTime}\n\n`;
+            report += `${message}\n\n`;
+            report += `━━━━━━━━━━━━━━━━━━━━━━━\n`;
+            report += `📋 DETALLE DE RESPUESTAS\n`;
+            report += `━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+            
+            questions.forEach((question, index) => {
+                const isCorrect = userAnswers[index] === question.correct;
+                report += `${index + 1}. ${question.question}\n`;
+                report += `   Tu respuesta: ${question.options[userAnswers[index]]} ${isCorrect ? '✓' : '✗'}\n`;
+                if (!isCorrect) {
+                    report += `   Correcta: ${question.options[question.correct]}\n`;
+                }
+                report += `\n`;
+            });
+            
+            report += `\n━━━━━━━━━━━━━━━━━━━━━━━\n`;
+            report += `Generado por Banco de Preguntas\n`;
+            
+            return report;
+        }
+
+        function downloadReport() {
+            const reportText = generateReportText();
+            const blob = new Blob([reportText], { type: 'text/plain;charset=utf-8' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `reporte_evaluacion_${new Date().getTime()}.txt`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        }
+
+        function shareWhatsApp() {
+            const percentage = (score / questions.length) * 100;
+            const totalTime = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(totalTime / 60);
+            const seconds = totalTime % 60;
+            
+            let message = '';
+            if (percentage >= 90) {
+                message = '¡Excelente! 🌟 Dominé el tema';
+            } else if (percentage >= 70) {
+                message = '¡Muy bien! 👍 Buen desempeño';
+            } else if (percentage >= 50) {
+                message = 'Bien 📚 Seguiré practicando';
+            } else {
+                message = 'Necesito repasar 📖';
+            }
+            
+            const whatsappText = `🎓 *REPORTE DE EVALUACIÓN*\n\n` +
+                `✅ Calificación: *${score}/${questions.length}* (${percentage.toFixed(0)}%)\n` +
+                `⏱️ Tiempo: ${minutes} min ${seconds} seg\n` +
+                `📅 Realizado: ${completionDateTime}\n\n` +
+                `${message}\n\n` +
+                `_Generado por Banco de Preguntas_`;
+            
+            const encodedText = encodeURIComponent(whatsappText);
+            const whatsappUrl = `https://wa.me/?text=${encodedText}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
         nextBtn.addEventListener('click', nextQuestion);
         document.getElementById('retryBtn').addEventListener('click', resetQuiz);
+        document.getElementById('downloadBtn').addEventListener('click', downloadReport);
+        document.getElementById('shareBtn').addEventListener('click', shareWhatsApp);
 
         // Iniciar el quiz
         loadQuestion();
